@@ -329,3 +329,4 @@ ssp/media/
 *.sqlite3
 
 *.code-workspace
+.vscode/
