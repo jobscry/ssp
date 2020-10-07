@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}Controls{% if control %}: {{ control }}{% endif %}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-sm-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url "controls:list" %}">Controls</a></li>
+    {% if control %}
+        {% if control.is_child_node %}
+            {% for ancestor in control.get_ancestors %}
+                        <li class="breadcrumb-item"><a href="{{ ancestor.get_absolute_url }}">{{ ancestor }}</a></li>
+            {% endfor %}
+        {% endif %}
+                    <li class="breadcrumb-item"><a href="{{ control.get_absolute_url }}">{{ control }}</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Update</li>
+    {% else %}
+                    <li class="breadcrumb-item active" aria-current="page">Add</li>
+    {% endif %}
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-sm-12">
+            <h1>Add Control</h1>
+    {% if control %}
+            <form class="form-horizontal" method="post" action="{% url 'controls:update' control.slug %}">
+    {% else %}
+            <form class="form-horizontal" method="post" action="{% url 'controls:create' %}">
+    {% endif %}
+                {% csrf_token %}
+                {{ form|crispy }}
+                <div class="control-group">
+                    <div class="controls">
+                        <button type="submit" class="btn btn-primary">{% if control %}Update{% else %}Add{% endif %}</button>
+    {% if control %}
+                        <a class="btn btn-warning" href="{{ control.get_absolute_url }}" role="button">Cancel</a></div>
+    {% else %}
+                        <a class="btn btn-warning" href="{% url 'controls:list' %}" role="button">Cancel</a></div>
+    {% endif %}
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

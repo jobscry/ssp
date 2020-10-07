@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}Plans{% if plan %}: {{ plan }}{% endif %}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-sm-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url "plans:list" %}">Controls</a></li>
+    {% if plan %}
+                    <li class="breadcrumb-item"><a href="{{ plan.get_absolute_url }}">{{ plan }}</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Update</li>
+    {% else %}
+                    <li class="breadcrumb-item active" aria-current="page">Add</li>
+    {% endif %}
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-sm-12">
+            <h1>Add Plan</h1>
+    {% if plan %}
+            <form class="form-horizontal" method="post" action="{% url 'plans:update' plan.pk %}">
+    {% else %}
+            <form class="form-horizontal" method="post" action="{% url 'plans:create' %}">
+    {% endif %}
+                {% csrf_token %}
+                {{ form|crispy }}
+                <div class="plan-group">
+                    <div class="plans">
+                        <button type="submit" class="btn btn-primary">{% if plan %}Update{% else %}Add{% endif %}</button>
+    {% if plan %}
+                        <a class="btn btn-warning" href="{{ plan.get_absolute_url }}" role="button">Cancel</a></div>
+    {% else %}
+                        <a class="btn btn-warning" href="{% url 'plans:list' %}" role="button">Cancel</a></div>
+    {% endif %}
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

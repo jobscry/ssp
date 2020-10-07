@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% load markdownify %}
+{% load crispy_forms_tags %}
+
+
+{% block title %}Plans: {{ detail.entry.plan.title|title }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-sm-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url "plans:list" %}">Plans</a></li>
+                    <li class="breadcrumb-item"><a href="{{ detail.entry.plan.get_absolute_url }}">{{ detail.entry.plan|title }}</a></li>
+                <li class="breadcrumb-item"><a href="{% url "plans:plan-control-entry" detail.entry.plan.pk detail.entry.control.slug %}">{{ detail.entry.control }}</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Delete</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-sm-12">
+            <h1>Delete Draft Entry for {{ detail.entry.plan|title }} {{ detail.entry.control }}</h1>
+            <form class="form-horizontal" method="post" action="{% url "plans:delete-detail" detail.pk %}">
+                {% csrf_token %}
+                <p>Are you sure you want to delete this draft entry? </p>
+                <div class="plan-group">
+                    <div class="plans">
+                        <button type="submit"
+                                class="btn btn-danger">Confirm</button>
+                        <a class="btn btn-warning" href="{% url "plans:plan-control-entry" detail.entry.plan.pk detail.entry.control.slug %}" role="button">Cancel</a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

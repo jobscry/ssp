@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+
+{% load humanize %}
+{% load markdownify %}
+{% load mptt_tags %}
+
+{% block title %}Plans: {{ plan.title|title }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-sm-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url "plans:list" %}">Plans</a></li>
+                    {% if control %}
+                    <li class="breadcrumb-item " aria-current="page"><a
+                            href="{{ plan.get_absolute_url }}">{{ plan|title }}</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">{{ control }}</li>
+                    {% else %}
+                    <li class="breadcrumb-item active" aria-current="page">{{ plan|title }}</li>
+                    {% endif %}
+                </ol>
+            </nav>
+        </div>
+    </div>
+    {% if perms.plans.change_plan %}
+    <div class="row">
+        <div class="col-sm-12">
+            <div class="float-right">
+                <div class="btn-group" role="group" aria-label="Entry Controls">
+                    <a class="btn btn-primary" href="{% url "plans:update" plan.pk %}" role="button">Update</a>
+                    <a class="btn btn-danger" href="{% url "plans:delete" plan.pk %}" role="button">Delete</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    <div class="row">
+        <div class="col-sm-12">
+            <h1>{{ plan|title }}</h1>
+            {{ plan.description|markdownify }}
+        </div>
+    </div>
+    {% if control %}
+    {% for child_control,structure in control_list|tree_info %}
+    {% if child_control.is_placeholder %}
+    {% if not forloop.first %}
+</div>
+</div>
+{% endif %}
+<div class="row">
+    <div class="col-sm-12">
+        <h3>{{ child_control }}</h3>
+        {{ child_control.body|markdownify }}
+        {% else %}
+        <div class="card mb-4">
+            <h5 class="card-header">{{ child_control }}</h5>
+            <div class="card-body">
+                {{ child_control.body|markdownify }}
+                <a href="{% url "plans:plan-control-entry" plan.pk child_control.slug %}" class="card-link">Details</a>
+            </div>
+        </div>
+        {% endif %}
+        {% endfor %}
+    </div>
+</div>
+{% else %}
+<div class="row">
+    <div class="col-sm-3">
+        <div class="card">
+            <h5 class="card-header">All Controls</h5>
+            <ul class="list-group list-group-flush">
+                {% for control in control_list %}
+                <li class="list-group-item list-group-item-action">
+                    <a href="{% url "plans:plan-control-detail" plan.pk control.slug %}">
+                        {{ control }}
+                        <span class="badge badge-primary badge-pill">{{ control.get_descendant_count }}</span>
+                    </a>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+    <div class="col-sm-9">
+        <div class="card">
+            <h5 class="card-header">Entries Pending Approval</h5>
+            <ul class="list-group list-group-flush">
+                {% for approve in pending_approval %}
+                <li class="list-group-item list-group-item-action">
+                    {% if approve.pk in approved %}<span class="badge badge-success">Approved</span> {% endif %}<a
+                        href="{% url "plans:plan-control-entry" approve.entry.plan.pk approve.entry.control.slug %}">{{ approve.entry.control }}</a>
+                    <small>{{ approve.modified_on|date }}</small>
+                </li>
+                {% empty %}
+                <li class="list-group-item list-group-item-action">None</li>
+                {% endfor %}
+            </ul>
+        </div>
+        <div class="card mt-3">
+            <h5 class="card-header">Draft Entries I Can Collaborate On</h5>
+            <ul class="list-group list-group-flush">
+                {% for collaborate in collaborating %}
+                <li class="list-group-item list-group-item-action">
+                    <a
+                        href="{% url "plans:plan-control-entry" collaborate.entry.plan.pk collaborate.entry.control.slug %}">{{ collaborate.entry.control }}</a>
+                    <small>{{ collaborate.modified_on|date }}</small>
+                </li>
+                {% empty %}
+                <li class="list-group-item list-group-item-action">None</li>
+                {% endfor %}
+            </ul>
+        </div>
+        <div class="card mt-3">
+            <h5 class="card-header">Draft Entries I Observe</h5>
+            <ul class="list-group list-group-flush">
+                {% for observe in observing %}
+                <li class="list-group-item list-group-item-action">
+                    <a
+                        href="{% url "plans:plan-control-entry" observe.entry.plan.pk observe.entry.control.slug %}">{{ observe.entry.control }}</a>
+                    <small>{{ observe.modified_on|date }}</small>
+                </li>
+                {% empty %}
+                <li class="list-group-item list-group-item-action">None</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+{% endif %}
+</div>
+{% endblock %}

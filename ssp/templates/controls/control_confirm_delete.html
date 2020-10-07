@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}Controls: {{ control }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-sm-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url "controls:list" %}">Controls</a></li>
+    {% if control.is_child_node %}
+        {% for ancestor in control.get_ancestors %}
+                    <li class="breadcrumb-item"><a href="{{ ancestor.get_absolute_url }}">{{ ancestor }}</a></li>
+        {% endfor %}
+    {% endif %}
+                    <li class="breadcrumb-item"><a href="{{ control.get_absolute_url }}">{{ control }}</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Delete</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-sm-12">
+            <h1>Delete {{ control }}</h1>
+            <form class="form-horizontal" method="post" action="{% url 'controls:delete' control.slug %}">
+                {% csrf_token %}
+                <p>Are you sure you want to delet this control?  This will also delete all child controls!</p>
+                <div class="control-group">
+                    <div class="controls">
+                        <button type="submit"
+                                class="btn btn-danger">Confirm</button>
+                        <a class="btn btn-warning" href="{{ control.get_absolute_url }}" role="button">Cancel</a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

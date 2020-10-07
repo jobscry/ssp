@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% load static %}
+{% load mptt_tags %}
+
+{% block title %}Controls{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-sm-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-itemactive" aria-current="page">Controls</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-sm-12">
+            {% if perms.controls.add_control %}<div class="float-right"><a class="btn btn-primary"
+                    href="{% url 'controls:create' %}" role="button">Add Control</a></div>{% endif %}
+            <h1>Controls</h1>
+
+            <ul>
+                {% for control in control_list  %}
+                <li><a href="{{ control.get_absolute_url }}">{{ control }}{% if control.get_descendant_count > 0 %}
+                        <span class="badge badge-light">{{ control.get_descendant_count }}</span>{% endif %}</li>
+                {% endfor %}
+            </ul>
+
+        </div>
+    </div>
+</div>
+{% endblock content %}

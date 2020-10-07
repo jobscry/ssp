@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+
+{% load humanize %}
+{% load markdownify %}
+{% load mptt_tags %}
+
+{% block title %}Plans: {{ plan.title|title }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-sm-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url "plans:list" %}">Plans</a></li>
+                    <li class="breadcrumb-item " aria-current="page"><a
+                            href="{{ plan.get_absolute_url }}">{{ plan|title }}</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">{{ control }}</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-sm-12">
+            <h1>{{ control }}</h1>
+            {{ control.body|markdownify }}
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-sm-12">
+            <div class="float-right mb-4">
+                <div class="btn-group" role="group" aria-label="Entry Controls">
+                    {% if perms.plans.change_plan %}
+                    {% if detail.status == "D" %}
+                    <a class="btn btn-danger" href="{% url "plans:delete-detail" detail.pk %}" role="button">Abandon
+                        Draft Entry</a>
+                    {% endif %}
+                    {% if detail.status != "P" and can_collaborate %}
+                    <a class="btn btn-primary" href="{% url "plans:update-detail" detail.pk %}" role="button">Update
+                        Entry</a>
+                    {% endif %}
+                    {% if detail.status == "PA" %}
+                    {% if can_approve %}
+                    <a class="btn btn-primary" href="{% url "plans:toggle-approve-detail" detail.pk %}"
+                        role="button">{% if approval %}Una{% else %}A{% endif %}pprove Entry</a>
+                    {% endif %}
+                    {% elif detail.status == "P" %}
+                    <a class="btn btn-primary" href="{% url "plans:create-detail" entry.pk %}" role="button">Create
+                        Draft Entry</a>
+                    {% endif %}
+                    <a class="btn btn-primary" href="{% url "plans:update-entry" entry.pk %}" role="button">Update
+                        People</a>
+                    {% else %}
+                    {% if detail.status == "D" and can_collaborate %}
+                    <a class="btn btn-primary" href="{% url "plans:update-detail" detail.pk %}" role="button">Update
+                        Entry</a>
+                    {% endif %}
+                    {% if detail.status == "PA" and can_approve %}
+                    <a class="btn btn-primary" href="{% url "plans:toggle-approve-detail" detail.pk %}"
+                        role="button">{% if approval %}Una{% else %}A{% endif %}pprove Entry</a>
+                    {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-sm-9">
+            <h3>
+                {% if detail.status != "P" %}
+                {% if detail.status == "D" %}<span class="badge badge-danger">Draft</span>
+                {% else %}{% if detail.has_all_approvals %}<span class="badge badge-success">Ready to
+                    Publish</span>{% else %}<span class="badge badge-warning">Pending Approval</span>{% endif %}
+                {% endif %}
+                {% endif %}
+                Entry <small class="text-muted">{{ detail.modified_on|date }}</small>
+            </h3>
+            {{ detail.text|markdownify }}
+        </div>
+        <div class="col-sm-3">
+            <div class="card mb-4">
+                <h5 class="card-header">Collaborators</h5>
+                <ul class="list-group list-group-flush">
+                    {% for collaborator in entry.collaborators.all %}
+                    <li class="list-group-item list-group-item-action">{{ collaborator }}</li>
+                    {% empty %}
+                    <li class="list-group-item list-group-item-action">no collaborators</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            <div class="card mb-4">
+                <h5 class="card-header">Approvers</h5>
+                <ul class="list-group list-group-flush">
+                    {% for approval in approval_list %}
+                    <li class="list-group-item list-group-item-action">{{ approval.user }} <small>approved
+                            {{ approval.created_on|date }}</small></li>
+                    {% endfor %}
+                    {% for approver in entry.approvers.all %}
+                    {% if approver.pk not in approval_pk_list %}
+                    <li class="list-group-item list-group-item-action">{{ approver }}</li>
+                    {% endif %}
+                    {% empty %}
+                    <li class="list-group-item list-group-item-action">no approvers</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            <div class="card mb-4">
+                <h5 class="card-header">Observers</h5>
+                <ul class="list-group list-group-flush">
+                    {% for observer in entry.observers.all %}
+                    <li class="list-group-item list-group-item-action">{{ observer }}</li>
+                    {% empty %}
+                    <li class="list-group-item list-group-item-action">no Observers</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% load humanize %}
+{% load markdownify %}
+
+{% block title %}Controls: {{ control.slug }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-sm-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url "controls:list" %}">Controls</a></li>
+                    {% if control.is_child_node %}
+                    {% for ancestor in control.get_ancestors %}
+                    <li class="breadcrumb-item"><a href="{{ ancestor.get_absolute_url }}">{{ ancestor }}</a></li>
+                    {% endfor %}
+                    {% endif %}
+                    <li class="breadcrumb-item active" aria-current="page">{{ control }}</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-sm-12">
+            {% if perms.controls.change_control %}<div class="float-right"><a class="btn btn-primary"
+                    href="{% url "controls:update" control.slug %}" role="button">Update</a> <a class="btn btn-danger"
+                    href="{% url "controls:delete" control.slug %}" role="button">Delete</a></div>{% endif %}
+            <h1>{{ control }}</h1>
+            {{ control.body|markdownify }}
+        </div>
+    </div>
+    {% if control.get_descendant_count > 0 %}
+    <div class="row">
+        <div class="col-sm-12">
+            <h2>Child{{ control.get_descendant_count|pluralize:"en" }}</h2>
+            <ul>
+                {% for child in control.get_children %}
+                <li><a href="{{ child.get_absolute_url }}">{{ child }}{% if child.get_descendant_count > 0 %} <span
+                            class="badge badge-light">{{ child.get_descendant_count }}</span>{% endif %}</a></li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

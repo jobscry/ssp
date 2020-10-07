@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% load markdownify %}
+{% load crispy_forms_tags %}
+
+
+{% block title %}Plans: {{ detail.entry.plan.title|title }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-sm-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url "plans:list" %}">Plans</a></li>
+                    <li class="breadcrumb-item"><a
+                            href="{{ detail.entry.plan.get_absolute_url }}">{{ detail.entry.plan|title }}</a></li>
+                    <li class="breadcrumb-item"><a
+                            href="{% url "plans:plan-control-entry" detail.entry.plan.pk detail.entry.control.slug %}">{{ detail.entry.control }}</a>
+                    </li>
+                    <li class="breadcrumb-item active" aria-current="page">Edit</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-sm-12">
+            <h1>{{ detail.entry.control }}</h1>
+            {{ detail.entry.control.body|markdownify }}
+        </div>
+    </div>
+    {% if detail.status == "PA" %}
+    <div class="row">
+        <div class="col-sm-12">
+            <div class="alert alert-warning" role="alert">
+            Editing a entry that is <i>pending approval</i> will remove all existing approvals.
+            </div>
+        </div>
+    </div>
+        {% if detail.has_all_approvals %}
+    <div class="row">
+        <div class="col-sm-12">
+            <div class="alert alert-info" role="alert">All approvals aquired, ready to publish.</div>
+        </div>
+    </div>
+        {% endif %}
+    {% endif %}
+    <div class="row">
+        <div class="col-sm-12">
+            <h3>Entry</h3>
+            <form class="form-horizontal" method="post" action="{% url "plans:update-detail" detail.pk %}">
+                {% csrf_token %}
+                {{ form|crispy }}
+                <div class="plan-group">
+                    <div class="plans">
+                        <button type="submit" class="btn btn-primary">Save</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

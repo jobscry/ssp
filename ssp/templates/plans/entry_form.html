@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% load markdownify %}
+{% load crispy_forms_tags %}
+
+
+{% block title %}Plans: {{ entry.plan.title|title }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-sm-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url "plans:list" %}">Plans</a></li>
+                    <li class="breadcrumb-item"><a href="{{ entry.plan.get_absolute_url }}">{{ entry.plan|title }}</a>
+                    </li>
+                    <li class="breadcrumb-item"><a
+                            href="{% url "plans:plan-control-entry" entry.plan.pk entry.control.slug %}">{{ entry.control }}</a>
+                    </li>
+                    <li class="breadcrumb-item active" aria-current="page">Edit People</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-sm-12">
+            <h3>Entry</h3>
+            <form class="form-horizontal" method="post" action="{% url "plans:update-entry" entry.pk %}">
+                {% csrf_token %}
+                {{ form|crispy }}
+                <div class="control-group">
+                    <div class="control">
+                        <button type="submit" class="btn btn-primary">Save</button>
+                        <a class="btn btn-warning"
+                            href="{% url "plans:plan-control-entry" entry.plan.pk entry.control.slug %}"
+                            role="button">Cancel</a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
