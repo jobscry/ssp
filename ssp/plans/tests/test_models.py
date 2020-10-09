@@ -2,16 +2,11 @@ import pytest
 from django.core.exceptions import ValidationError
 
 from ssp.controls.tests.factories import ControlFactory
-from ssp.plans.models import Approval, Detail, Entry, get_sentinel_user
+from ssp.plans.models import Approval, Detail, Entry
 from ssp.plans.tests.factories import DetailFactory, EntryFactory, PlanFactory
 from ssp.users.tests.factories import UserFactory
 
 pytestmark = pytest.mark.django_db
-
-
-def test_get_sentinel_user():
-    u = get_sentinel_user()
-    assert u.username == "deleted"
 
 
 class TestPlanModel:
