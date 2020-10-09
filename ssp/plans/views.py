@@ -36,8 +36,9 @@ class PlanCreateView(BasePlanRestrictedView, CreateView):
     def form_valid(self, form):
         self.object = form.save(commit=False)
         self.object.creator = self.request.user
+        self.objects.save()
         messages.success(self.request, "Plan created.", fail_silently=True)
-        return super().form_valid(form)
+        return redirect(self.get_success_url())
 
 
 class PlanDetailView(BasePlanView, DetailView):
