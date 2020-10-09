@@ -9,10 +9,7 @@ from django.dispatch import receiver
 from django.urls import reverse_lazy
 
 from ssp.controls.models import Control
-
-
-def get_sentinel_user():
-    return get_user_model().objects.get_or_create(username="deleted")[0]
+from ssp.utils.models import get_sentinel_user
 
 
 class Plan(models.Model):
