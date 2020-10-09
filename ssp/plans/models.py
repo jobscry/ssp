@@ -6,7 +6,7 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from django.urls import reverse
+from django.urls import reverse_lazy
 
 from ssp.controls.models import Control
 
@@ -27,7 +27,7 @@ class Plan(models.Model):
         return self.title
 
     def get_absolute_url(self):
-        return reverse("plans:detail", args=[self.pk])
+        return reverse_lazy("plans:detail", args=[self.pk])
 
 
 class Entry(models.Model):
