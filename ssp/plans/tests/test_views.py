@@ -11,7 +11,6 @@ from ssp.plans.tests.factories import DetailFactory, EntryFactory, PlanFactory
 from ssp.plans.views import (
     PlanCreateView,
     PlanDetailView,
-    create_detail,
     plan_control_entry,
 )
 from ssp.users.tests.factories import UserFactory
