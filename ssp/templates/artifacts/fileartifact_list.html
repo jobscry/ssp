@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% load static %}
+
+{% block title %}Artifacts{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-sm-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item active" aria-current="page">Artifacts</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-sm-12">
+            {% if perms.artifacts.add_artifact %}<div class="float-right"><a class="btn btn-primary"
+                    href="{% url 'artifacts:create-file-artifact' %}" role="button">Add Artifact</a></div>{% endif %}
+            <h1>File Artifacts</h1>
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th scope="col">Name</th>
+                        <th scope="col">Type</th>
+                        <th scope="col">Size</th>
+                        <th scope="col">Hash</th>
+                        <th scope="col">Uploaded By</th>
+                        <th scope="col">Uploaded Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+    {% for artifact in fileartifact_list  %}
+                    <tr>
+                        <td>
+                            <a href="{{ artifact.upload.url }}">{{ artifact.name }}</a>
+        {% if perms.artifacts.add_artifact or artifact.creator.pk == user.pk %}
+                            <br>
+                            <a href="{% url "artifacts:delete-file-artifact" artifact.pk %}" class="btn btn-danger btn-sm" role="button">Delete</a>
+        {% endif %}
+                        </td>
+                        <td>{{ artifact.file_extension }}</td>
+                        <td>{{ artifact.size|filesizeformat }}</td>
+                        <td>{{ artifact.file_hash }}</td>
+                        <td>{{ artifact.creator }}</td>
+                        <td>{{ artifact.created_on|date }}</td>
+                    </tr>
+    {% empty %}
+                    <tr><td colspan="6">No file artifacts.</td></tr>
+    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock content %}

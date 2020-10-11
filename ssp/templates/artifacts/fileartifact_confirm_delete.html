@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}Artifacts: {{ fileartifact.name }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-sm-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url "artifacts:list" %}">Artifacts</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Delete</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-sm-12">
+            <h1>Delete File Artifact</h1>
+            <p>Are you sure you want to delete the {{ fileartifact.file_extension }} file {{ fileartifact.name }}?</p>
+            <form class="form-horizontal" method="post" action="{% url 'artifacts:delete-file-artifact' fileartifact.pk %}"
+                enctype="multipart/form-data">
+                {% csrf_token %}
+                {{ form|crispy }}
+                <div class="control-group">
+                    <div class="controls">
+                        <button type="submit" class="btn btn-danger">Delete</button>
+                        <a class="btn btn-warning" href="{% url 'artifacts:list' %}" role="button">Cancel</a></div>
+                </div>
+        </div>
+        </form>
+    </div>
+</div>
+</div>
+{% endblock %}

@@ -56,6 +56,10 @@
             <a class="nav-link" href="{% url 'plans:list' %}">Plans{% if active_tab == "plans" %} <span
                 class="sr-only">(current)</span>{% endif %}</a>
           </li>
+          <li class="nav-item{% if active_tab == "artifacts" %} active{% endif %}">
+            <a class="nav-link" href="{% url 'artifacts:list' %}">Artifacts{% if active_tab == "artifacts" %} <span
+                class="sr-only">(current)</span>{% endif %}</a>
+          </li>
           {% endif %}
           <li class="nav-item">
             <a class="nav-link" href="{% url 'about' %}">About</a>

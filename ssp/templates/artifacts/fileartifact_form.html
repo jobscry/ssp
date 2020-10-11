@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}Artifacts{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-sm-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url "artifacts:list" %}">Artifacts</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Create</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-sm-12">
+            <h1>Add File Artifact</h1>
+            <form class="form-horizontal" method="post" action="{% url 'artifacts:create-file-artifact' %}"
+                enctype="multipart/form-data">
+                {% csrf_token %}
+                {{ form|crispy }}
+                <div class="control-group">
+                    <div class="controls">
+                        <button type="submit" class="btn btn-primary">Create</button>
+                        <a class="btn btn-warning" href="{% url 'artifacts:list' %}" role="button">Cancel</a></div>
+                </div>
+        </div>
+        </form>
+    </div>
+</div>
+</div>
+{% endblock %}

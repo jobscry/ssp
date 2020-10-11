@@ -86,6 +86,7 @@ LOCAL_APPS = [
     "ssp.users.apps.UsersConfig",
     "ssp.controls.apps.ControlsConfig",
     "ssp.plans.apps.PlansConfig",
+    "ssp.artifacts.apps.ArtifactsConfig",
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
