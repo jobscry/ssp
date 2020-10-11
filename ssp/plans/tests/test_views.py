@@ -228,8 +228,8 @@ class TestPlanViews:
 
         client.login(username=user.username, password="test")
         assert Approval.objects.filter(detail=d, user=user).count() == 0
-        response = client.get(reverse("plans:toggle-approve-detail", args=[d.pk]))
+        client.get(reverse("plans:toggle-approve-detail", args=[d.pk]))
         assert Approval.objects.filter(detail=d, user=user).count() == 1
 
-        response = client.get(reverse("plans:toggle-approve-detail", args=[d.pk]))
+        client.get(reverse("plans:toggle-approve-detail", args=[d.pk]))
         assert Approval.objects.filter(detail=d, user=user).count() == 0
