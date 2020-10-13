@@ -2,7 +2,7 @@ import pytest
 from django.core.exceptions import ValidationError
 
 from ssp.controls.tests.factories import ControlFactory
-from ssp.plans.models import Approval, Detail, Entry
+from ssp.plans.models import Approval, Detail, Entry, ControlDemotionException, Plan
 from ssp.plans.tests.factories import DetailFactory, EntryFactory, PlanFactory
 from ssp.users.tests.factories import UserFactory
 
@@ -13,6 +13,27 @@ class TestPlanModel:
     def test__str__(self):
         p = PlanFactory.build()
         assert p.title == f"{p}"
+
+    def test_plan_clean(self):
+        c1 = ControlFactory()
+        c2 = ControlFactory(parent=c1)
+        p = PlanFactory(root_control=c2)
+
+        with pytest.raises(ValidationError):
+            p.clean()
+
+    def test_stop_control_demotion(self):
+        c1 = ControlFactory()
+        c2 = ControlFactory()
+        p = PlanFactory(root_control=c2)
+
+        assert p.root_control.parent is None
+
+        with pytest.raises(ControlDemotionException):
+            c2.parent = c1
+            c2.save()
+
+            assert p.root_control.parent is not None
 
 
 class TestEntryModel:

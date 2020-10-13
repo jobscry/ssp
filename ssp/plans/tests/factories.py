@@ -9,6 +9,7 @@ from ssp.users.tests.factories import UserFactory
 class PlanFactory(DjangoModelFactory):
     title = Sequence(lambda n: "plan %03d" % n)
     description = Sequence(lambda n: "plan description %03d" % n)
+    root_control = SubFactory(ControlFactory)
     creator = SubFactory(UserFactory)
 
     class Meta:
@@ -25,6 +26,7 @@ class EntryFactory(DjangoModelFactory):
 
 class DetailFactory(DjangoModelFactory):
     entry = SubFactory(EntryFactory)
+    plan = SubFactory(PlanFactory)
     text = Sequence(lambda n: "detail text %03d" % n)
 
     class Meta:

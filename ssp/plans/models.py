@@ -1,10 +1,9 @@
 from datetime import datetime, timezone
 
 from django.conf import settings
-from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.db import models
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
 from django.urls import reverse_lazy
 
@@ -14,6 +13,7 @@ from ssp.utils.models import get_sentinel_user
 
 class Plan(models.Model):
     title = models.CharField(max_length=100, unique=True)
+    root_control = models.ForeignKey(Control, on_delete=models.CASCADE)
     description = models.TextField()
     creator = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.SET(get_sentinel_user),
@@ -25,6 +25,24 @@ class Plan(models.Model):
 
     def get_absolute_url(self):
         return reverse_lazy("plans:detail", args=[self.pk])
+
+    def clean(self):
+        if self.root_control.parent is not None:
+            raise ValidationError("Control must be a root control.")
+
+
+@receiver(pre_save, sender=Control)
+def stop_control_demotion(sender, instance, **kwargs):
+    if instance.pk:
+        if (
+            instance.parent is not None
+            and Plan.objects.filter(root_control=instance).exists()
+        ):
+            raise ControlDemotionException
+
+
+class ControlDemotionException(Exception):
+    pass
 
 
 class Entry(models.Model):
@@ -72,6 +90,7 @@ class Detail(models.Model):
         (PENDING_APPROVAL, "Pending Approval"),
     ]
     entry = models.ForeignKey(Entry, on_delete=models.CASCADE)
+    plan = models.ForeignKey(Plan, on_delete=models.CASCADE)
     status = models.CharField(max_length=3, choices=STATUS_CHOICES, default=DRAFT)
     text = models.TextField()
     approvals = models.ManyToManyField(settings.AUTH_USER_MODEL, through="Approval")
@@ -156,5 +175,8 @@ class Approval(models.Model):
 def create_initial_detail_for_entry(sender, instance, created, **kwargs):
     if created:
         Detail.objects.create(
-            entry=instance, status=Detail.PUBLISHED, text="entry created"
+            entry=instance,
+            plan=instance.plan,
+            status=Detail.PUBLISHED,
+            text="entry created",
         )

@@ -13,6 +13,7 @@ from ssp.controls.models import Control
 from ssp.utils.views import ActiveTabView
 
 from .models import Approval, Detail, Entry, Plan
+from .forms import NewPlanForm
 
 
 class BasePlanView(LoginRequiredMixin, ActiveTabView):
@@ -31,7 +32,7 @@ class PlanListView(BasePlanView, ListView):
 
 class PlanCreateView(BasePlanRestrictedView, CreateView):
     model = Plan
-    fields = ("title", "description")
+    form_class = NewPlanForm
 
     def form_valid(self, form):
         self.object = form.save(commit=False)
@@ -51,16 +52,24 @@ class PlanDetailView(BasePlanView, DetailView):
             context["control"] = get_object_or_404(Control, slug=control_slug)
             context["control_list"] = context["control"].get_descendants()
         else:
-            context["control_list"] = Control.objects.filter(parent=None).all()
+            context["control_list"] = Control.objects.filter(
+                parent=self.object.root_control
+            ).all()
             context["pending_approval"] = Detail.objects.select_related().filter(
-                status=Detail.PENDING_APPROVAL, entry__approvers=self.request.user,
+                plan=self.object,
+                status=Detail.PENDING_APPROVAL,
+                entry__approvers=self.request.user,
             )
             context["pending_approval_count"] = context["pending_approval"].count()
             context["collaborating"] = Detail.objects.select_related().filter(
-                status=Detail.DRAFT, entry__collaborators=self.request.user,
+                plan=self.object,
+                status=Detail.DRAFT,
+                entry__collaborators=self.request.user,
             )
             context["observing"] = Detail.objects.select_related().filter(
-                status=Detail.DRAFT, entry__observers=self.request.user,
+                plan=self.object,
+                status=Detail.DRAFT,
+                entry__observers=self.request.user,
             )
             context["approved"] = list(
                 Approval.objects.filter(plan=self.object, user=self.request.user)
@@ -157,7 +166,7 @@ class EntryUpdateView(BasePlanRestrictedView, SuccessMessageMixin, UpdateView):
 @login_required
 @permission_required("plans.change_plan")
 def create_detail(request, entry_pk):
-    entry = get_object_or_404(Entry, pk=entry_pk)
+    entry = get_object_or_404(Entry.objects.select_related(), pk=entry_pk)
 
     if Detail.objects.filter(
         entry=entry, status__in=[Detail.DRAFT, Detail.PENDING_APPROVAL]
@@ -165,7 +174,9 @@ def create_detail(request, entry_pk):
         raise PermissionDenied
     else:
         prev_detail = entry.latest_published_detail()
-        detail = Detail.objects.create(entry=entry, text=prev_detail.text)
+        detail = Detail.objects.create(
+            entry=entry, plan=entry.plan, text=prev_detail.text
+        )
         return redirect("plans:update-detail", pk=detail.pk)
 
 
@@ -199,9 +210,7 @@ def toggle_detail_approval(request, pk):
     )
 
 
-class DetailUpdateView(
-    BasePlanView, UserPassesTestMixin, SuccessMessageMixin, UpdateView
-):
+class DetailUpdateView(BasePlanView, SuccessMessageMixin, UpdateView):
     model = Detail
     fields = ("status", "text")
     success_message = "Entry updated."
@@ -209,11 +218,14 @@ class DetailUpdateView(
         "entry", "entry__plan", "entry__control"
     )
 
-    def test_func(self):
-        if self.request.user.has_perm("plans.change_plan"):
-            return True
-
-        return self.object.entry.collaborators.filter(pk=self.request.user.pk).exists()
+    def get_object(self, queryset=None):
+        obj = super().get_object(queryset=None)
+        if not (
+            self.request.user.has_perms("plans.change_plan")
+            or obj.entry.collaborators.filter(pk=self.request.user.pk).exists()
+        ):
+            raise PermissionDenied
+        return obj
 
     def get_success_url(self):
         if self.object.status == Detail.PUBLISHED:

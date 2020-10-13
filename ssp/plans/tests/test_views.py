@@ -51,7 +51,12 @@ class TestPlanViews:
 
     def test_PlanCreateView_add_user(self, request_factory, user):
         request = request_factory.post(
-            reverse("plans:create"), {"title": "test", "description": "test"}
+            reverse("plans:create"),
+            {
+                "title": "test",
+                "description": "test",
+                "root_control": ControlFactory().pk,
+            },
         )
         request.user = user
         PlanCreateView.as_view()(request)
@@ -232,3 +237,21 @@ class TestPlanViews:
 
         client.get(reverse("plans:toggle-approve-detail", args=[d.pk]))
         assert Approval.objects.filter(detail=d, user=user).count() == 0
+
+
+class TestDetailView:
+    def test_DetailUpdateView_permissions(self, client, user):
+        e = EntryFactory()
+        d = DetailFactory(entry=e, status=Detail.DRAFT)
+
+        u = UserFactory()
+        u.set_password("test")
+        u.save()
+        client.login(username=u.username, password="test")
+        response = client.get(reverse("plans:update-detail", args=[d.pk]))
+        assert response.status_code == 403
+
+        e.collaborators.add(user)
+        client.login(username=user.username, password="test")
+        response = client.get(reverse("plans:update-detail", args=[d.pk]))
+        assert response.status_code == 200
