@@ -12,6 +12,9 @@ from .views import (
     DetailDeleteView,
     EntryUpdateView,
     toggle_detail_approval,
+    FileArtifactCreateView,
+    FileArtifactDetailView,
+    FileArtifactDeleteView,
 )
 
 app_name = "Plans"
@@ -37,6 +40,21 @@ urlpatterns = [
         name="toggle-approve-detail",
     ),
     path("<int:pk>/", view=PlanDetailView.as_view(), name="detail"),
+    path(
+        "<int:pk>/artifact/upload/",
+        view=FileArtifactCreateView.as_view(),
+        name="plan-create-fileartifact",
+    ),
+    path(
+        "<int:plan_pk>/artifact/<int:pk>/delete/",
+        view=FileArtifactDeleteView.as_view(),
+        name="fileartifact-delete",
+    ),
+    path(
+        "<int:plan_pk>/artifact/<int:pk>/",
+        view=FileArtifactDetailView.as_view(),
+        name="fileartifact-detail",
+    ),
     path(
         "<int:plan_pk>/<slug:control_slug>/detail/",
         view=plan_control_entry,

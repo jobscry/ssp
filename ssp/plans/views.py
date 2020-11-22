@@ -1,6 +1,10 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, permission_required
-from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.contrib.auth.mixins import (
+    LoginRequiredMixin,
+    UserPassesTestMixin,
+    PermissionRequiredMixin,
+)
 from django.contrib.messages.views import SuccessMessageMixin
 from django.core.exceptions import PermissionDenied
 from django.shortcuts import get_object_or_404, redirect, render
@@ -12,7 +16,7 @@ from django.views.generic.list import ListView
 from ssp.controls.models import Control
 from ssp.utils.views import ActiveTabView
 
-from .models import Approval, Detail, Entry, Plan
+from .models import Approval, Detail, Entry, Plan, FileArtifact
 from .forms import NewPlanForm
 
 
@@ -75,6 +79,9 @@ class PlanDetailView(BasePlanView, DetailView):
                 Approval.objects.filter(plan=self.object, user=self.request.user)
                 .select_related()
                 .values_list("detail__pk", flat=True)
+            )
+            context["artifact_list"] = FileArtifact.objects.select_related().filter(
+                plan=self.object
             )
         return context
 
@@ -146,6 +153,7 @@ def plan_control_entry(request, plan_pk, control_slug):
             "approval_list": approval_list,
             "approval_pk_list": approval_pk_list,
             "active_tab": "plans",
+            "has_artifacts": detail.file_artifacts.count() > 0,
         },
     )
 
@@ -212,11 +220,18 @@ def toggle_detail_approval(request, pk):
 
 class DetailUpdateView(BasePlanView, SuccessMessageMixin, UpdateView):
     model = Detail
-    fields = ("status", "text")
+    fields = ("status", "text", "file_artifacts")
     success_message = "Entry updated."
     queryset = Detail.objects.exclude(status=Detail.PUBLISHED).select_related(
         "entry", "entry__plan", "entry__control"
     )
+
+    def get_form(self, form_class=None):
+        form = super().get_form(form_class)
+        form.fields["file_artifacts"].queryset = FileArtifact.objects.filter(
+            plan=self.object.plan
+        )
+        return form
 
     def get_object(self, queryset=None):
         obj = super().get_object(queryset=None)
@@ -248,3 +263,50 @@ class DetailDeleteView(BasePlanRestrictedView, DeleteView):
             "plans:plan-control-entry",
             args=[self.object.entry.plan.pk, self.object.entry.control.slug],
         )
+
+
+class FileArtifactCreateView(BasePlanView, PermissionRequiredMixin, CreateView):
+    model = FileArtifact
+    fields = ("name", "upload")
+    permission_required = "artifacts.add_fileartifact"
+
+    def form_valid(self, form):
+        plan = get_object_or_404(Plan, pk=self.kwargs["pk"])
+        self.object = form.save(commit=False)
+        self.object.creator = self.request.user
+        self.object.plan = plan
+        self.object.save()
+        return redirect(reverse_lazy("plans:detail", args=[plan.pk]))
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["plan"] = get_object_or_404(
+            Plan.objects.select_related(), pk=self.kwargs["pk"]
+        )
+        return context
+
+
+class FileArtifactDetailView(BasePlanView, DetailView):
+    model = FileArtifact
+
+    def get_object(self, queryset=None):
+        obj = get_object_or_404(
+            FileArtifact.objects.select_related(),
+            pk=self.kwargs["pk"],
+            plan=self.kwargs["plan_pk"],
+        )
+        return obj
+
+
+class FileArtifactDeleteView(BasePlanView, PermissionRequiredMixin, DeleteView):
+    model = FileArtifact
+    fields = ("name", "upload")
+    permission_required = "artifacts.delete_fileartifact"
+
+    def get_object(self, queryset=None):
+        obj = get_object_or_404(
+            FileArtifact.objects.select_related(),
+            pk=self.kwargs["pk"],
+            plan=self.kwargs["plan_pk"],
+        )
+        return obj

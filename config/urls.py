@@ -17,7 +17,6 @@ urlpatterns = [
     path("accounts/", include("allauth.urls")),
     path("controls/", include("ssp.controls.urls", namespace="controls"),),
     path("plans/", include("ssp.plans.urls", namespace="plans"),),
-    path("artifacts/", include("ssp.artifacts.urls", namespace="artifacts"),),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 if settings.DEBUG:

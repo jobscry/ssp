@@ -31,89 +31,103 @@
         <div class="col-sm-12">
             <div class="float-right mb-4">
                 <div class="btn-group" role="group" aria-label="Entry Controls">
-                    {% if perms.plans.change_plan %}
-                    {% if detail.status == "D" %}
+    {% if perms.plans.change_plan %}
+        {% if detail.status == "D" %}
                     <a class="btn btn-danger" href="{% url "plans:delete-detail" detail.pk %}" role="button">Abandon
                         Draft Entry</a>
-                    {% endif %}
-                    {% if detail.status != "P" and can_collaborate %}
+        {% endif %}
+        {% if detail.status != "P" and can_collaborate %}
                     <a class="btn btn-primary" href="{% url "plans:update-detail" detail.pk %}" role="button">Update
                         Entry</a>
-                    {% endif %}
-                    {% if detail.status == "PA" %}
-                    {% if can_approve %}
+        {% endif %}
+        {% if detail.status == "PA" %}
+            {% if can_approve %}
                     <a class="btn btn-primary" href="{% url "plans:toggle-approve-detail" detail.pk %}"
                         role="button">{% if approval %}Una{% else %}A{% endif %}pprove Entry</a>
-                    {% endif %}
-                    {% elif detail.status == "P" %}
+            {% endif %}
+        {% elif detail.status == "P" %}
                     <a class="btn btn-primary" href="{% url "plans:create-detail" entry.pk %}" role="button">Create
                         Draft Entry</a>
-                    {% endif %}
+        {% endif %}
                     <a class="btn btn-primary" href="{% url "plans:update-entry" entry.pk %}" role="button">Update
                         People</a>
-                    {% else %}
-                    {% if detail.status == "D" and can_collaborate %}
+    {% else %}
+        {% if detail.status == "D" and can_collaborate %}
                     <a class="btn btn-primary" href="{% url "plans:update-detail" detail.pk %}" role="button">Update
                         Entry</a>
-                    {% endif %}
-                    {% if detail.status == "PA" and can_approve %}
+        {% endif %}
+        {% if detail.status == "PA" and can_approve %}
                     <a class="btn btn-primary" href="{% url "plans:toggle-approve-detail" detail.pk %}"
                         role="button">{% if approval %}Una{% else %}A{% endif %}pprove Entry</a>
-                    {% endif %}
-                    {% endif %}
+        {% endif %}
+    {% endif %}
                 </div>
             </div>
         </div>
     </div>
 
     <div class="row">
-        <div class="col-sm-9">
+        <div class="col-sm-{% if has_artifacts %}6{% else %}9{% endif %}">
             <h3>
-                {% if detail.status != "P" %}
-                {% if detail.status == "D" %}<span class="badge badge-danger">Draft</span>
-                {% else %}{% if detail.has_all_approvals %}<span class="badge badge-success">Ready to
+    {% if detail.status != "P" %}
+        {% if detail.status == "D" %}<span class="badge badge-danger">Draft</span>
+        {% else %}{% if detail.has_all_approvals %}<span class="badge badge-success">Ready to
                     Publish</span>{% else %}<span class="badge badge-warning">Pending Approval</span>{% endif %}
-                {% endif %}
-                {% endif %}
+        {% endif %}
+    {% endif %}
                 Entry <small class="text-muted">{{ detail.modified_on|date }}</small>
             </h3>
             {{ detail.text|markdownify }}
         </div>
+    {% if has_artifacts %}
+        <div class="col-sm-3">
+            <div class="card mb-4">
+                <h5 class="card-header">Artifacts</h5>
+                <ul class="list-group list-group-flush">
+        {% for file_artifact in detail.file_artifacts.all %}
+                    <li class="list-group-item list-group-item-action">
+                        <a href="{% url "plans:fileartifact-detail" plan.pk file_artifact.pk %}">{{ file_artifact }}</a>
+                    </li>
+        {% endfor %}
+                </ul>
+            </div>
+        </div>
+    {% endif %}
         <div class="col-sm-3">
             <div class="card mb-4">
                 <h5 class="card-header">Collaborators</h5>
                 <ul class="list-group list-group-flush">
-                    {% for collaborator in entry.collaborators.all %}
+    {% for collaborator in entry.collaborators.all %}
                     <li class="list-group-item list-group-item-action">{{ collaborator }}</li>
-                    {% empty %}
+    {% empty %}
                     <li class="list-group-item list-group-item-action">no collaborators</li>
-                    {% endfor %}
+    {% endfor %}
                 </ul>
             </div>
             <div class="card mb-4">
                 <h5 class="card-header">Approvers</h5>
                 <ul class="list-group list-group-flush">
-                    {% for approval in approval_list %}
+    {% for approval in approval_list %}
                     <li class="list-group-item list-group-item-action">{{ approval.user }} <small>approved
                             {{ approval.created_on|date }}</small></li>
-                    {% endfor %}
-                    {% for approver in entry.approvers.all %}
-                    {% if approver.pk not in approval_pk_list %}
+    {% endfor %}
+    {% for approver in entry.approvers.all %}
+        {% if approver.pk not in approval_pk_list %}
                     <li class="list-group-item list-group-item-action">{{ approver }}</li>
-                    {% endif %}
-                    {% empty %}
+        {% endif %}
+    {% empty %}
                     <li class="list-group-item list-group-item-action">no approvers</li>
-                    {% endfor %}
+    {% endfor %}
                 </ul>
             </div>
             <div class="card mb-4">
                 <h5 class="card-header">Observers</h5>
                 <ul class="list-group list-group-flush">
-                    {% for observer in entry.observers.all %}
+    {% for observer in entry.observers.all %}
                     <li class="list-group-item list-group-item-action">{{ observer }}</li>
-                    {% empty %}
+    {% empty %}
                     <li class="list-group-item list-group-item-action">no Observers</li>
-                    {% endfor %}
+    {% endfor %}
                 </ul>
             </div>
         </div>
